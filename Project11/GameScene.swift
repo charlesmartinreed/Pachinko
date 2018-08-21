@@ -8,9 +8,14 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
+        //physicsWorld is the physics sim associated with the scene
+        physicsWorld.contactDelegate = self
+        
+        //creating a score for our game
+        
         //creating our background
         let background = SKSpriteNode(imageNamed: "background.jpg")
         background.position = CGPoint(x: 512, y: 384)
@@ -50,13 +55,20 @@ class GameScene: SKScene {
         if isGood {
             slotBase = SKSpriteNode(imageNamed: "slotBaseGood")
             slotGlow = SKSpriteNode(imageNamed: "slotGlowGood")
+            //apple recommends using node names to organize and interact with them, rather than setting up variables that reference them
+            slotBase.name = "good"
         } else {
             slotBase = SKSpriteNode(imageNamed: "slotBaseBad")
             slotGlow = SKSpriteNode(imageNamed: "slotGlowBad")
+            slotBase.name = "bad"
         }
         
         slotBase.position = position
         slotGlow.position = position
+        
+        //we need rectangle physics for our slot; non-dynamic because it shouldn't move when a player ball hits it.
+        slotBase.physicsBody = SKPhysicsBody(rectangleOf: slotBase.size)
+        slotGlow.physicsBody?.isDynamic = false
         
         addChild(slotBase)
         addChild(slotGlow)
@@ -75,15 +87,48 @@ class GameScene: SKScene {
             
             //creating a ball and giving it physics
             let ball = SKSpriteNode(imageNamed: "ballRed")
+            ball.name = "ball"
             
             //using circleOfRadius to give our ball circular physics
             ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.size.width / 2.0)
             
             //restitution = bounciness. Values range from 0-1.
             ball.physicsBody?.restitution = 0.4
+            
+            //contactBitMask = what a physics object can make contact with
+            //collisionBitMask = what collisions we want to know about
+            //setting the contactBitMask to the collisionBitMask means we want to be informed of all collisions
+            ball.physicsBody!.contactTestBitMask = ball.physicsBody!.collisionBitMask
             ball.position = location
             addChild(ball)
 
         }
+    }
+    
+    //called when a ball collides with something else. If the object we get from the delegate method didBegin is named "good" or "bad", we handle the case accordingly.
+    func collisionBetween(ball: SKNode, object: SKNode) {
+        if object.name == "good" {
+            destroy(ball: ball)
+        } else if object.name == "bad" {
+            destroy(ball: ball)
+        }
+    }
+    
+    //check for collisions between the balls and other objects by looking at the node name and sending it to the collisionBetween func accordingly.
+    //using guard statements to protect against the possibility that two collisions will be registered, ball into slot AND slot into ball.
+    func didBegin(_ contact: SKPhysicsContact) {
+        guard let nodeA = contact.bodyA.node else { return }
+        guard let nodeB = contact.bodyB.node else { return }
+        
+        if nodeA.name == "ball" {
+            collisionBetween(ball: nodeA, object: nodeB)
+        } else if nodeB.name == "ball" {
+            collisionBetween(ball: nodeB, object: nodeA)
+        }
+    }
+    
+    //removes the node from your node tree, AKA, your game
+    func destroy(ball: SKNode) {
+        ball.removeFromParent()
     }
 }
