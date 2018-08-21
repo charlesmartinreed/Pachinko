@@ -132,7 +132,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             } else {
                 if editingMode {
                     //create a box with a fixed height and random width, of a random color and a random zRotation. Place it where the user touches, when the editing mode is active.
-                    let size = CGSize(width: GKRandomDistribution(lowestValue: 16, highestValue: 128).nextInt(), height: 16)
+                    let size = CGSize(width: GKRandomDistribution(lowestValue: 32, highestValue: 128).nextInt(), height: 16)
                     let box = SKSpriteNode(color: RandomColor(), size: size)
                     box.zRotation = RandomCGFloat(min: 0, max: 3)
                     box.position = location
@@ -194,6 +194,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     //removes the node from your node tree, AKA, your game
     func destroy(ball: SKNode) {
+        
+        //SKEmitterNode is used for particle effects in SpriteKit
+        if let fireParticles = SKEmitterNode(fileNamed: "FireParticles") {
+            fireParticles.position = ball.position
+            addChild(fireParticles)
+        }
+        
         ball.removeFromParent()
     }
 }
