@@ -17,9 +17,22 @@ class GameScene: SKScene {
         background.blendMode = .replace
         background.zPosition = -1
         addChild(background)
+        
+        //enclose the frame in a physics body boundary, so that when the edge of the frame is reached, the box stops and bounces semi-realistically.
+        physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        //code
+        
+        //just to test things out, let's place a box where we tap
+        if let touch = touches.first {
+            let location = touch.location(in: self)
+            let box = SKSpriteNode(color: UIColor.red, size: CGSize(width: 64, height: 64))
+            
+            //give the box a physics body of the same size
+            box.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 64, height: 64))
+            box.position = location
+            addChild(box)
+        }
     }
 }
